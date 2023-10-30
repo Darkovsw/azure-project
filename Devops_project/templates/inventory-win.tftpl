@@ -1,0 +1,12 @@
+[windowsmachines]
+${WindowsMachinesIPs}
+[all:vars]
+ansible_connection=winrm
+ansible_port=5985
+ansible_winrm_transport=ntlm
+ansible_user=${login}
+ansible_password=${password}
+filesharelogin=${filesharelogin}
+filesharepassword=${filesharepassword}
+fileshareurl=${fileshareurl}
+fileshareurlgetcred=${fileshareurlgetcred}

@@ -1,0 +1,67 @@
+---
+
+- hosts: all
+  gather_facts: no
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_pass: "{{ ansible_password }}"
+  tasks:
+
+  - name: Givig some time to VMs after Terraforms deployment
+    ansible.builtin.pause:
+      seconds: 30
+
+  - name: Install 7zip, Chrome, Notepad++
+    win_chocolatey:
+      name: 
+      - 7zip
+      - firefox
+      - notepadplusplus
+      state: present
+    tags: applications
+
+  - name: Create mapped drive with credentials and save the username and password
+    block:
+    - name: Save the network credentials required for the mapped drive
+      community.windows.win_credential:
+        name: "{{ fileshareurlgetcred }}"
+        type: domain_password
+        username: "{{ filesharelogin }}"
+        secret: "{{ filesharepassword }}"
+        state: present
+      tags: drive
+
+  - name: Create a mapped drive that requires authentication
+    community.windows.win_mapped_drive:
+      letter: M
+      path: "{{ fileshareurl }}"
+      state: present
+      username: "{{ filesharelogin }}"
+      password: "{{ filesharepassword }}"
+    tags: drive
+
+  - name: Set file explorer to show hidden files and folders
+    ansible.windows.win_regedit:
+      path: HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+      name: Hidden
+      data: 1
+      type: dword
+    tags: registry
+
+  - name: Set file explorer to show extension of files
+    ansible.windows.win_regedit:
+      path: HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+      name: HideFileExt
+      data: 0
+      type: dword
+    tags: registry
+
+  - name: Set file explorer to open in 'This PC' location
+    ansible.windows.win_regedit:
+      path: HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+      name: LaunchTo
+      data: 1
+      type: dword
+    tags: registry
